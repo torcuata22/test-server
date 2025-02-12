@@ -1,4 +1,7 @@
 HTTP/1.1
 L7 Protocol
 Sent over TCP
-Message Based
+Message Based, not streaming data
+Request handles Method, path, query string, protocol
+Response handles Protocol, response, body
+Will ignore headers in request and response for this application
