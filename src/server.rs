@@ -1,4 +1,7 @@
-use std::io::BufReader;
+//use std::io::BufReader;
+use crate::http::Request;
+use std::convert::TryFrom;
+use std::convert::TryInto; //compiler will automatically implement for the slice: Request::try_from(&buffer[..]);
 use std::io::Read;
 use std::net::TcpListener;
 pub struct Server {
@@ -20,7 +23,15 @@ impl Server {
                     let mut buffer = [0; 1024];
                     match stream.read(&mut buffer) {
                         Ok(_) => {
-                            println!("Receiver request: {}", String::from_utf8_lossy(&buffer))
+                            println!("Receiver request: {}", String::from_utf8_lossy(&buffer));
+                            match Request::try_from(&buffer[..]) {
+                                Ok(request) => {
+                                    println!("Request");
+                                }
+                                Err(e) => {
+                                    println!("Failed to parse request: {}", e);
+                                }
+                            }
                         }
                         Err(e) => {
                             println!("Connection failed {}", e);
@@ -57,3 +68,5 @@ impl Server {
 //to a stream.
 //In other words, the stream is the source of the data, and the buffer is a
 //temporary storage area for a chunk of that data.
+//this: Request::try_from(&buffer as &[u8]); is equivalent to Request::try_from(&buffer[..]);
+//let res: &Result<Request, _> = &buffer[..].try_into(); is now possible
