@@ -16,9 +16,16 @@ impl Server {
         loop {
             match listener.accept() {
                 Ok((mut stream, _)) => {
-                    let mut reader = BufReader::new(&mut stream);
+                    // let mut reader = BufReader::new(&mut stream);
                     let mut buffer = [0; 1024];
-                    stream.read(&mut stream);
+                    match stream.read(&mut buffer) {
+                        Ok(_) => {
+                            println!("Receiver request: {}", String::from_utf8_lossy(&buffer))
+                        }
+                        Err(e) => {
+                            println!("Connection failed {}", e);
+                        }
+                    }
                 }
 
                 Err(e) => {
@@ -43,4 +50,10 @@ impl Server {
 //tuple example:let tup = (4, "hi", listener fixed length, different data types
 //read() is not part of the TCP Stream struct, it is part of the Read trait, so we need to import it
 //read() is a method that will read from the stream'
-//
+//Stream: A stream is a flow of data that is transmitted over a network
+//connection, in this case, a TCP connection. The stream variable  represents
+//the TCP connection itself, a continuous flow of data.
+//Buffer:temporary storage area for data that is being read from or written
+//to a stream.
+//In other words, the stream is the source of the data, and the buffer is a
+//temporary storage area for a chunk of that data.
