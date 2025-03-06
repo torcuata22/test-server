@@ -1,9 +1,8 @@
-use crate::http::method::Method;
+use super::method::{Method, MethodError};
 use core::str;
 use std::convert::TryFrom;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
-// use std::str;
 use std::str::Utf8Error;
 use std::string::String;
 
@@ -25,11 +24,12 @@ impl TryFrom<&[u8]> for Request {
         let (method, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?; //we are reassigning the var named "request" this is called variable shadowing
         let (path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?; //we are reassigning the var named "request" this is called variable shadowing
         let (protocol, _) = get_next_word(request).ok_or(ParseError::InvalidRequest)?; //we are reassigning the var named "request" this is called variable shadowing
-        
+
         //in this case, only suppor http 1.1, so add check for that:
         if protocol != "HTTP/1.1" {
             return Err(ParseError::InvalidProtocol);
         }
+        let method: Method = method.parse()?;
         unimplemented!();
     }
 }
@@ -43,7 +43,7 @@ fn get_next_word(request: &str) -> Option<(&str, &str)> {
             return Some((&request[..i], &request[i + 1..]));
         }
     }
-    None
+    None::<(&str, &str)>;
     unimplemented!();
 }
 
@@ -68,6 +68,12 @@ impl ParseError {
 impl From<Utf8Error> for ParseError {
     fn from(_: Utf8Error) -> Self {
         Self::InvalidEncoding
+    }
+}
+
+impl From<MethodError> for ParseError {
+    fn from(_: MethodError) -> Self {
+        Self::InvalidMethod
     }
 }
 
@@ -113,3 +119,4 @@ BODY (ignore for now)
 //         None => break,
 //     }
 // }
+//to convert method : &str into Enum: see method.rs
