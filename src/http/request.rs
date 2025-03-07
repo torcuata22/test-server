@@ -22,7 +22,7 @@ impl TryFrom<&[u8]> for Request {
         let request = str::from_utf8(buf)?;
         //parse contents: first extract method, then path and query string, and lastl the protocol
         let (method, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?; //we are reassigning the var named "request" this is called variable shadowing
-        let (path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?; //we are reassigning the var named "request" this is called variable shadowing
+        let (mut path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?; //we are reassigning the var named "request" this is called variable shadowing
         let (protocol, _) = get_next_word(request).ok_or(ParseError::InvalidRequest)?; //we are reassigning the var named "request" this is called variable shadowing
 
         //in this case, only suppor http 1.1, so add check for that:
@@ -30,7 +30,18 @@ impl TryFrom<&[u8]> for Request {
             return Err(ParseError::InvalidProtocol);
         }
         let method: Method = method.parse()?;
-        unimplemented!();
+        //separate query string fromthe path:
+        let mut query_string = None;
+        //need to find the "?" in the request -> "if let" allows pattern matching in an if statement
+        if let Some(i) = path.find('?') {
+            query_string = Some(path[i + 1..].to_string());
+            path = &path[..i];
+        }
+        Ok(Self {
+            path: path.to_string(),
+            query_string,
+            method,
+        })
     }
 }
 
@@ -120,3 +131,12 @@ BODY (ignore for now)
 //     }
 // }
 //to convert method : &str into Enum: see method.rs
+
+//one (clunky) way to separate the path and the query string:
+// match path.find("?") {
+//     Some(i) => {
+//         query_string = Some(&path[i + 1..].to_string()); //everything after the '?' is the query string
+//         path = &path[..i]; //path is everything before '?'
+//     }
+//     None => {}
+// }
