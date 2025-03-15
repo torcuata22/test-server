@@ -1,4 +1,5 @@
 use super::method::{Method, MethodError};
+use super::QueryString;
 use core::str;
 use std::convert::TryFrom;
 use std::error::Error;
@@ -6,18 +7,20 @@ use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::str::Utf8Error;
 use std::string::String;
 
-pub struct Request {
-    path: String,
-    query_string: Option<String>,
+//in this case, the lifetime of the request is the lifetime of the buffer, so name it'buf
+pub struct Request<'buf> {
+    path: &'buf str,
+    query_string: Option<QueryString<'buf>>,
     method: Method,
 }
 
-impl TryFrom<&[u8]> for Request {
+//because Request is generic, I need to give it a lifetime in the implementation, need to add it to impl block
+impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
     type Error = ParseError;
 
     //GET /search?name=abc&sort=1 HTTP/1.1
 
-    fn try_from(buf: &[u8]) -> Result<Self, Self::Error> {
+    fn try_from(buf: &'buf [u8]) -> Result<Request<'buf>, Self::Error> {
         //transform buffer into string slice
         let request = str::from_utf8(buf)?;
         //parse contents: first extract method, then path and query string, and lastl the protocol
@@ -31,14 +34,14 @@ impl TryFrom<&[u8]> for Request {
         }
         let method: Method = method.parse()?;
         //separate query string fromthe path:
-        let mut query_string = None;
+        let mut query_string: Option<QueryString<'buf>> = None;
         //need to find the "?" in the request -> "if let" allows pattern matching in an if statement
         if let Some(i) = path.find('?') {
-            query_string = Some(path[i + 1..].to_string());
+            query_string = Some(QueryString::from(&path[i + 1..]));
             path = &path[..i];
         }
         Ok(Self {
-            path: path.to_string(),
+            path,
             query_string,
             method,
         })
@@ -140,3 +143,6 @@ BODY (ignore for now)
 //     }
 //     None => {}
 // }
+
+//to use lifetimes in a struct I need to make the struct generic over a lifetime (not a type)
+//usually lifetimes are given a single letter name, for example < 'a>

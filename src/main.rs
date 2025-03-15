@@ -1,3 +1,5 @@
+#![allow(dead_code)] //tels compiler not to warn about unused stuff
+
 //make modules accessible: prepend name of module that contains it
 use http::Method;
 use http::Request;
