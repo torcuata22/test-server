@@ -8,6 +8,7 @@ use std::str::Utf8Error;
 use std::string::String;
 
 //in this case, the lifetime of the request is the lifetime of the buffer, so name it'buf
+#[derive(Debug)]
 pub struct Request<'buf> {
     path: &'buf str,
     query_string: Option<QueryString<'buf>>,
